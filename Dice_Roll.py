@@ -7,6 +7,21 @@ class dice_roll(object):
         self.output = 0
         self.output_list = []
 
+# Function for rolling attributes will roll 4 d6s and drop lowest
+    def stat_roll(self):
+        rolls = []
+        return_roll = 0
+        
+        for i in range(0, 4):
+            rolls.append(randint(1,6))
+        rolls = sorted(rolls)
+        
+        for i in range(1, 4):
+            return_roll += rolls[i]
+        
+        return return_roll
+        
+
 # Rolls a certain dice a certain number of times and returns the sum before clearing self.output    
     def roll(self, roll, times = 1):
         for i in list(range(0,times)):
