@@ -2,11 +2,12 @@ from Dice_Roll import dice_roll
 import configparser
 
 # Contains functions for creating and storing character values        
-class stats(object):
+class char(object):
     def __init__(self):   
         self.dice = dice_roll()
-        self.character = {'name': "",'level': 1, 'race': "", 'hp': 0, "Armor": 10, 'str': 0, 'str_base' : 0, 'dex': 0, 'dex_base' : 0, 'con': 0, 'con_base' : 0, 'int': 0, 'int_base' : 0,  'wis' : 0, 'wis_base' : 0, 'cha' : 0, 'cha_base' : 0}
-        self.score_mods = configparser.ConfigParser()
+        self.character = {'name': "", 'race': "", 'hp': 0, "Armor": 10, 'str': 0, 'str_base' : 0, 'dex': 0, 'dex_base' : 0, 'con': 0, 'con_base' : 0, 'int': 0, 'int_base' : 0,  'wis' : 0, 'wis_base' : 0, 'cha' : 0, 'cha_base' : 0}
+        self.role = char_class()
+        self.score_mod = configparser.ConfigParser()
         self.score_mod.sections()
         self.score_mod.read('score_mod.ini')
         self.race_mod = configparser.ConfigParser()
@@ -31,6 +32,8 @@ class stats(object):
             self.create_char()
         if choice == 2:
             self.create_char_pb()
+        
+        self.start_class()
         
         print("Here is your final character: \n")
         self.print_char()
@@ -62,14 +65,27 @@ class stats(object):
             print("Roll Selection: ")
             for i in range(0, len(rolls)):
                 print("{}. {}".format(i + 1, rolls[i]))
-            
-            roll_input = input("Select a roll: ")
+                
+            okay = False
+            while okay == False:
+                roll_input = input("Select a roll: ")
+                if roll_input.isdigit() and int(roll_input) <= 6 and int(roll_input) >= 1:
+                    okay = True
+                else:
+                    print("That is not a number in range, please try again")
             
             print(" ")
             print("Attribute Selection: ")
             for i in range(0, len(attribute)):
                 print("{}. {}".format(i + 1, attribute[i]))
-            att_input = input("Select an attribute: ")
+            
+            okay = False
+            while okay == False:
+                att_input = input("Select an attribute: ")
+                if att_input.isdigit() and int(att_input) <= 6 and int(att_input) >= 1:
+                    okay = True
+                else:
+                    print("That is not a number in range, please try again")                
             
             print(" ")
             self.character[att_base[int(att_input) - 1]] = int(rolls[int(roll_input) - 1])
@@ -83,24 +99,30 @@ class stats(object):
         self.base_stat()
         
         print("Here are your current attributes:")
-        self.print_char()
+        self.print_stat()
         
         stat_ask = 'y'
-        while stat_ask[0].lower() == 'y':
+        stat_start = True
+        while stat_ask[0].lower() == 'y' or stat_start == True:
+            stat_start = False
             stat_ask = input("Do you want to switch the values of two stats Y/N: ")
             print(" ")
             if stat_ask[0].lower() == 'n':
                 break
-            done = 0
-            while done == 0:
-                switch1 = input("Enter the abbreviation of the first stat please (ex. str): ")
-                switch2 = input("Okay now the second: ")
-                if self.stat_switch(switch1, switch2):
-                    done = 1
-                    self.print_char()
-                    print(" ")
-                else:
-                    print("That didn't seem to work, try again! Remember to use the abbreviations!") 
+            elif stat_ask[0].lower() != 'y':
+                print("I do not understand that input, please try again")
+                stat_start = True
+            else:
+                done = False
+                while not done:
+                    switch1 = input("Enter the abbreviation of the first stat please (ex. str): ")
+                    switch2 = input("Okay now the second: ")
+                    if self.stat_switch(switch1, switch2):
+                        done = True
+                        self.print_stat()
+                        print(" ")
+                    else:
+                        print("That didn't seem to work, try again! Remember to use the abbreviations!") 
         
         self.racial_modifier()
         self.base_stat()
@@ -142,33 +164,48 @@ class stats(object):
             self.character[att_base[i]] = attribute[i]
             
         print("Here are your current attributes: ")
-        print_char()
+        self.base_stat()
+        self.print_stat()
         
         stat_ask = 'y'
-        while stat_ask[0].lower() == 'y':
+        stat_start = True
+        while stat_ask[0].lower() == 'y' or stat_start == True:
+            stat_start = False
             stat_ask = input("Do you want to switch the values of two stats Y/N: ")
             print(" ")
             if stat_ask[0].lower() == 'n':
                 break
-            done = 0
-            while done == 0:
-                switch1 = input("Enter the abbreviation of the first stat please (ex. str): ")
-                switch2 = input("Okay now the second: ")
-                if self.stat_switch(switch1, switch2):
-                    done = 1
-                    self.print_char()
-                    print(" ")
-                else:
-                    print("That didn't seem to work, try again! Remember to use the abbreviations!")        
-        
+            elif stat_ask[0].lower() != 'y':
+                print("I do not understand that input, please try again")
+                stat_start = True
+            else:
+                done = False
+                while not done:
+                    switch1 = input("Enter the abbreviation of the first stat please (ex. str): ")
+                    switch2 = input("Okay now the second: ")
+                    if self.stat_switch(switch1, switch2):
+                        done = True
+                        self.print_stat()
+                        print(" ")
+                    else:
+                        print("That didn't seem to work, try again! Remember to use the abbreviations!")        
         self.racial_modifier()    
         self.base_stat()
+
+    def start_class(self):
+        self.role.choose_class()
 
 # Function for returning the number of an attribute, takes name of attribute, returns a value as an integer  
     def call_stat(self, stat):
         if self.test_input(stat):
             return int(self.character[stat])
-        return
+        return False
+    
+# Function for call the bonus modifier for a stat returns modifier as integer
+    def call_stat_mod(self, stat):
+        if self.test_input(stat):
+            return int(self.score_mod[str(self.character[stat])])
+        return False
 
 # Function for making sure race entered is valid, may not be being used anymore    
     def check_race(self):
@@ -190,16 +227,23 @@ class stats(object):
         self.character['wis'] = self.character['wis_base']
         self.character['cha'] = self.character['cha_base']        
 
-# Function for printing all character stats        
-    def print_char(self):
-        print("{} the level {} {}'s Stats:".format(self.character['name'],self.character['level'], self.character['race']))
+    def print_stat(self):
         print("Strength: {}".format(self.character['str']))
         print("Dexterity: {}".format(self.character['dex']))
         print("Constitution: {}".format(self.character['con']))
         print("Intelligence: {}".format(self.character['int']))
         print("Wisdom: {}".format(self.character['wis']))
-        print("Charisma: {}".format(self.character['cha']))
-        print(" ")
+        print("Charisma: {}\n".format(self.character['cha']))
+
+# Function for printing all character stats with class       
+    def print_char(self):
+        print("{} the level {} {} {}:".format(self.character['name'],self.role.c_class['level_1'], self.character['race'], self.role.c_class['class_1']))
+        print("Strength: {}".format(self.character['str']))
+        print("Dexterity: {}".format(self.character['dex']))
+        print("Constitution: {}".format(self.character['con']))
+        print("Intelligence: {}".format(self.character['int']))
+        print("Wisdom: {}".format(self.character['wis']))
+        print("Charisma: {}\n".format(self.character['cha']))
 
 # Function for switching two attributes, takes two attributes, returns T/F based on if inputs are valid        
     def stat_switch(self, stat1, stat2):
@@ -284,7 +328,44 @@ class stats(object):
 class char_class(object):
     def __init__(self):
         self.dice = dice_roll()
-        self.c_class = {class_1 : " ", class_2 : "", level_1 : 1, level_2: 0}
-        self.race_mod = configparser.ConfigParser()
-        self.race_mod.sections()
-        self.race_mod.read('Classes.ini')
+        self.c_class = {'class_1' : " ", 'level_1' : 1, 'hd' : 0}
+        self.choice = {1 : 'barbarian', 2 : 'bard', 3 : 'cleric', 4 : 'druid', 5 : 'fighter', 6 : 'monk', 7 : 'paladin', 8 : 'ranger', 9 : 'sorcerer', 8 : 'warlock', 9 : 'wizard'}
+        self.call_class = {'barbarian' : 'barb.ini', 'bard' : 'bard.ini', 'cleric' : 'cler.ini', 'druid' : 'dru.ini', 'fighter' : 'figh.ini', 'monk' : 'monk.ini', 'paladin' : 'pala.ini', 'ranger' : 'rang.ini', 'sorcerer' : 'sorc.ini', 'warlock' : 'warl.ini', 'wizard' : 'wiza.ini'}
+        self.called_class = configparser.ConfigParser()
+        self.called_class.sections()
+        
+    def choose_class(self):
+        choice_list = sorted(self.choice.keys())
+        choice = 0
+        
+        done = 'y'
+        start = True
+        while done[0].lower() == 'y' or start == True:
+            start = False
+            for i in choice_list:
+                print("{}. {}".format(i, self.choice[i].capitalize()))        
+            
+            okay = False
+            while okay == False:            
+                choice = int(input("Please choose a class for your character: \n"))
+                if choice.isdidigt() and int(choice) <= len(self.choice.keys()) and int(choice) >= 1:
+                    okay = True
+                else:
+                    print("That is not a number in range, please try again")            
+            
+            print("You have chosen {}.".format(self.choice[choice].capitalize()))
+            
+            done = input("Do you want to change classes Y/N: ")
+            
+            if done[0].lower() == 'n':
+                self.called_class.read(self.call_class[self.choice[choice]])
+                break
+            elif done[0].lower() != 'y' or done[0].lower() != 'n':
+                print("I do not understand that input, please try again.")
+                start = True
+                
+        self.c_class['class_1'] = self.called_class[self.choice[choice]]['name']
+        self.c_class['hd'] = self.called_class[self.choice[choice]]['hd']
+        
+                
+                
