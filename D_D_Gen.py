@@ -5,7 +5,7 @@ import configparser
 class char(object):
     def __init__(self):   
         self.dice = dice_roll()
-        self.character = {'name': "", 'race': "", 'hp': 0, "Armor": 10, 'str': 0, 'str_base' : 0, 'dex': 0, 'dex_base' : 0, 'con': 0, 'con_base' : 0, 'int': 0, 'int_base' : 0,  'wis' : 0, 'wis_base' : 0, 'cha' : 0, 'cha_base' : 0}
+        self.character = {'name': "", 'race': "",'o_level' : 1, 'hp': 0, "Armor": 10, 'str': 0, 'str_base' : 0, 'dex': 0, 'dex_base' : 0, 'con': 0, 'con_base' : 0, 'int': 0, 'int_base' : 0,  'wis' : 0, 'wis_base' : 0, 'cha' : 0, 'cha_base' : 0}
         self.role = char_class()
         self.score_mod = configparser.ConfigParser()
         self.score_mod.sections()
@@ -34,6 +34,8 @@ class char(object):
             self.create_char_pb()
         
         self.start_class()
+        
+        self.hd_add()
         
         print("Here is your final character: \n")
         self.print_char()
@@ -238,6 +240,7 @@ class char(object):
 # Function for printing all character stats with class       
     def print_char(self):
         print("{} the level {} {} {}:".format(self.character['name'],self.role.c_class['level_1'], self.character['race'], self.role.c_class['class_1']))
+        print("Hit Points: {}".format(self.character['hp']))
         print("Strength: {}".format(self.character['str']))
         print("Dexterity: {}".format(self.character['dex']))
         print("Constitution: {}".format(self.character['con']))
@@ -317,7 +320,7 @@ class char(object):
             sub_race = sub_race[int(num) - 1]
         
         except:
-            sub_race = races[int(race) -1]            
+            sub_race = races[int(race) - 1]            
         
         for key in self.race_mod[sub_race]:
             alter = self.race_mod[sub_race][key]
@@ -325,12 +328,19 @@ class char(object):
         
         self.character['race'] = sub_race.replace("_", " ")
         
+    def lvl_up(self, lvl = 1):
+        self.character['o_level'] = self.role.cl_lvl_up(self.character['o_level'], lvl)
+        self.hd_add(lvl)
+        
+    def hd_add(self, lvl = 1):
+        self.character['hp'] = self.role.cl_hd_add(self.character['hp'], self.character['o_level'], lvl, int(self.score_mod['score_mod'][str(self.character['con_base'])]))
+    
 class char_class(object):
     def __init__(self):
         self.dice = dice_roll()
         self.c_class = {'class_1' : " ", 'level_1' : 1, 'hd' : 0}
         self.choice = {1 : 'barbarian', 2 : 'bard', 3 : 'cleric', 4 : 'druid', 5 : 'fighter', 6 : 'monk', 7 : 'paladin', 8 : 'ranger', 9 : 'sorcerer', 8 : 'warlock', 9 : 'wizard'}
-        self.call_class = {'barbarian' : 'barb.ini', 'bard' : 'bard.ini', 'cleric' : 'cler.ini', 'druid' : 'dru.ini', 'fighter' : 'figh.ini', 'monk' : 'monk.ini', 'paladin' : 'pala.ini', 'ranger' : 'rang.ini', 'sorcerer' : 'sorc.ini', 'warlock' : 'warl.ini', 'wizard' : 'wiza.ini'}
+        self.call_class = {'barbarian' : 'barb.ini', 'bard' : 'bard.ini', 'cleric' : 'cler.ini', 'druid' : 'dru.ini', 'fighter' : 'figh.ini', 'monk' : 'monk.ini', 'paladin' : 'pala.ini', 'ranger' : 'rang.ini', 'rogue' : 'rogu.ini', 'sorcerer' : 'sorc.ini', 'warlock' : 'warl.ini', 'wizard' : 'wiza.ini'}
         self.called_class = configparser.ConfigParser()
         self.called_class.sections()
         
@@ -347,8 +357,9 @@ class char_class(object):
             
             okay = False
             while okay == False:            
-                choice = int(input("Please choose a class for your character: \n"))
-                if choice.isdidigt() and int(choice) <= len(self.choice.keys()) and int(choice) >= 1:
+                choice = input("Please choose a class for your character: \n")
+                if choice.isdigit() and int(choice) <= len(self.choice.keys()) and int(choice) >= 1:
+                    choice = int(choice)
                     okay = True
                 else:
                     print("That is not a number in range, please try again")            
@@ -365,7 +376,22 @@ class char_class(object):
                 start = True
                 
         self.c_class['class_1'] = self.called_class[self.choice[choice]]['name']
-        self.c_class['hd'] = self.called_class[self.choice[choice]]['hd']
+        self.c_class['hd'] = int(self.called_class[self.choice[choice]]['hd'])
         
-                
+    def cl_level_up(self, o_level, lvl):     
+        for l in range(0, num):
+            self.c_class['level_1'] += 1
+            o_level += 1 
+        return o_level       
+        
+        
+    def cl_hd_add(self, hp, o_level, lvl_up, con_mod):
+        if o_level == 1:
+            hp = self.c_class['hd']
+            hp += con_mod
+        else:
+            for l in range(0, lvl_up):
+                hp += dice.roll(self.c_class['hd'])
+                hp += con_mod
+        return hp                
                 
